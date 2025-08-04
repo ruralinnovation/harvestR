@@ -119,9 +119,19 @@ get_table <- function(table = NULL,
 
   # Create URL --------------------------------------------------------------
   harvestR:::check_date_format(query = query)
-  url <- paste0('v2/', table) %>% httr::modify_url(url="https://api.harvestapp.com",
-                                                   path=.,
-                                                   query=query)
+  url <- httr::modify_url(url="https://api.harvestapp.com",
+                          path=paste0('v2/', table),
+                          query=query)
+  
+  # Extract the response table name from the endpoint
+  # For endpoints like 'users/me/project_assignments', the JSON response key is 'project_assignments'
+  response_table <- if(grepl("project_assignments", table)) {
+    "project_assignments"
+  } else if(grepl("user_assignments", table)) {
+    "user_assignments"
+  } else {
+    table
+  }
 
   # Get Request -------------------------------------------------------------
   response <- harvestR:::get_request(url = url,
@@ -131,7 +141,7 @@ get_table <- function(table = NULL,
                                      times = input_params$times,
                                      httr_config_opts = httr_config_opts,
                                      quiet = quiet,
-                                     table = table,
+                                     table = response_table,
                                      token = token)
   # Get requests (multi-page) -----------------------------------------------
   if(response$total_pages > 1){
@@ -156,23 +166,23 @@ get_table <- function(table = NULL,
     responses <- purrr::map(url_groups, function(x) harvestR:::get_requests_lim(urls = x,
                                                                                 user = user,
                                                                                 key = key,
-                                                                                table = table,
+                                                                                table = response_table,
                                                                                 quiet = quiet,
                                                                                 httr_config_opts = httr_config_opts,
                                                                                 times = input_params$times,
                                                                                 token = token,
                                                                                 furrr_opts = furrr_opts))
-    responses_df <- purrr::map(responses, function(x){ purrr::map_dfr(x, function(y) y[table]) }) %>%
-      purrr::map(table) %>%
+    responses_df <- purrr::map(responses, function(x){ purrr::map_dfr(x, function(y) y[response_table]) }) %>%
+      purrr::map(response_table) %>%
       dplyr::bind_rows()
     # Reset execution plan to default
     future::plan("default")
     # Pull the dataframe from the initial get request
-    response_df <- response[[table]]
+    response_df <- response[[response_table]]
     # Add responses to the initial response
     df <- dplyr::bind_rows(response_df, responses_df)
   } else {
-    df <- response[[table]]
+    df <- response[[response_table]]
   }
   return(df)
 }

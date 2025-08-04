@@ -31,16 +31,22 @@ get_request <- function(url = NULL,
   # Default ... params
   input_params <- list(...)
   # Get Request -------------------------------------------------------------
+  # Always print the URL for debugging
+  message(glue::glue("Making request to URL: {url}"))
   if(!input_params$quiet){
     message(glue::glue("Attempting {url}\n"))
   }
+  
+  # Add Bearer prefix if not already present
+  auth_header <- if(startsWith(key, "Bearer ")) key else paste("Bearer", key)
+  
   # There is a quiet param, but it causes issues with 429 errors
   #https://github.com/r-lib/httr/issues/611
   response <- httr::RETRY(url,
                           verb = "GET",
                           config = httr::config(input_params$httr_config_opts, token = input_params$token),
                           httr::add_headers(.headers = c("Harvest-Account-ID" = user,
-                                                         Authorization = key)),
+                                                         Authorization = auth_header)),
                           times = input_params$times)
 
   if(!httr::http_error(response)){
@@ -52,7 +58,7 @@ get_request <- function(url = NULL,
     }
     return(content)
   } else{
-    stop(httr::stop_for_status(reponse))
+    stop(httr::stop_for_status(response))
   }
 }
 

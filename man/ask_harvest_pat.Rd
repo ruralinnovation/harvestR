@@ -4,7 +4,7 @@
 \alias{ask_harvest_pat}
 \title{Ask user for Harvest pat}
 \usage{
-ask_harvest_pat(msg = "Harvest API Bearer Token")
+ask_harvest_pat(msg = "Harvest API Personal Access Token")
 }
 \arguments{
 \item{msg}{message in the Rstudio prompt}

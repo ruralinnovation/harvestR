@@ -5,7 +5,7 @@ harvestR is a get wrapper to extract tables from the Harvest API v2.
 ## Installation
 To install harvestR run the following:
 ``` r
-devtools::install_github("propellerpdx/harvestR")
+remotes::install_github("ruralinnovation/harvestR")
 ```
 
 ## Credentials
